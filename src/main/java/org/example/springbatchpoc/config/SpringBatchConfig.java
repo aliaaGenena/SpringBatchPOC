@@ -9,6 +9,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.dao.DefaultExecutionContextSerializer;
+import org.springframework.batch.core.repository.dao.Jackson2ExecutionContextStringSerializer;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.data.RepositoryItemWriter;
@@ -100,7 +101,7 @@ public class SpringBatchConfig {
 		factory.setDataSource(dataSource);
 		factory.setTransactionManager(new DataSourceTransactionManager(dataSource));
 
-		factory.setSerializer(new DefaultExecutionContextSerializer());
+		factory.setSerializer(new Jackson2ExecutionContextStringSerializer());
 
 		factory.afterPropertiesSet();
 		return factory.getObject();
