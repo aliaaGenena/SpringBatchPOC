@@ -1,9 +1,6 @@
 package org.example.springbatchpoc.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,9 +12,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Customer {
 
+
+
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "ID")
+	private Long internalId;
+
 	@Column(name = "CUSTOMER_ID")
-	private int id;
+	private int customerId;
 	@Column(name = "FIRST_NAME")
 	private String firstName;
 	@Column(name = "LAST_NAME")

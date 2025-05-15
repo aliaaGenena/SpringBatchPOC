@@ -3,16 +3,14 @@ package org.example.springbatchpoc.config;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.repository.JobRestartException;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
+import org.springframework.batch.core.launch.JobOperator;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -21,16 +19,19 @@ import java.util.List;
 public class AutoRecoverAndRetryFailedJobs {
 
     private final JobExplorer jobExplorer;
-    private final JobRegistry jobRegistry;
+    private final JobRepository jobRepository;
     private final JobLauncher jobLauncher;
+    private final JobOperator jobOperator;
 
     public AutoRecoverAndRetryFailedJobs(JobExplorer jobExplorer,
                                          JobRepository jobRepository,
                                          JobRegistry jobRegistry,
-                                         JobLauncher jobLauncher) {
+                                         JobLauncher jobLauncher,
+                                         JobOperator jobOperator) {
         this.jobExplorer = jobExplorer;
-        this.jobRegistry = jobRegistry;
+        this.jobRepository = jobRepository;
         this.jobLauncher = jobLauncher;
+        this.jobOperator = jobOperator;
     }
 
 
@@ -62,20 +63,18 @@ public class AutoRecoverAndRetryFailedJobs {
                     break; // ✅ Skip the rest of this instance's executions
                 }
 
-                if (status == BatchStatus.FAILED
+                if (latestExecution.getStatus().isUnsuccessful() || status == BatchStatus.FAILED
                         || (status == BatchStatus.STARTED
                         && latestExecution.getEndTime() == null)){
                        // && latestExecution.getStartTime().isBefore(LocalDateTime.now().minusHours(1)))) {
                     try {
                         System.out.println("Stuck execution found AND Retrying job: " + jobName + " [latestExecutionId=" + latestExecution.getId() + "]");
+                       System.out.println("Job appears stuck. Marking as FAILED.");
+                        latestExecution.setStatus(BatchStatus.FAILED);
+                        latestExecution.setEndTime(LocalDateTime.now());
+                        jobRepository.update(latestExecution);
+                        jobOperator.restart(latestExecution.getId());
 
-                        Job job = jobRegistry.getJob(jobName);
-                        JobParameters jobParameters = latestExecution.getJobParameters();
-
-                        jobLauncher.run(job, jobParameters);
-
-                    } catch (JobExecutionAlreadyRunningException e) {
-                        System.err.println("Job already running: JobExecutionAlreadyRunningException : " + jobName);
                     } catch (JobInstanceAlreadyCompleteException e) {
                         System.err.println("Job already completed : JobInstanceAlreadyCompleteException : " + jobName);
                     } catch (JobRestartException e) {

@@ -14,7 +14,7 @@ public class CustomerProcessor implements ItemProcessor<Customer, Customer> {
 
 			// sleep the main thread for 1 min
 	//		Thread.sleep(10000);
-			System.exit(1); // simulate crash
+	//		System.exit(1); // simulate crash
 
 		}
 

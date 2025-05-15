@@ -20,7 +20,7 @@ public class CustomerJobScheduler {
     @Autowired
     private Job job;
 
-    @Scheduled(fixedRate = 60 * 60 * 1000) // every 1 hour
+  //  @Scheduled(fixedRate = 60 * 60 * 1000) // every 1 hour
     public void launchJob() throws Exception {
         JobParameters params = new JobParametersBuilder()
                 .addString("jobName", "customerJob")
